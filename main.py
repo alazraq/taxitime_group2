@@ -55,7 +55,7 @@ df_X = df_train.drop(['taxitime'], axis=1)
 X_train, X_test, y_train, y_test = train_test_split(
      df_X, df_y, test_size=0.2, random_state=42)
 print("Successfully split into training and validation datasets.")
-# 7. Models definition
+# 4. Models definition
 
 # GBM
 print("Fitting a GBM model...")
@@ -69,7 +69,7 @@ model_rf =  RFModel()
 model_rf.fit(x_train=X_train, y_train=y_train, x_test=X_test, y_test=y_test)
 print("Fitting RF model done.")
 
-# 8. Prediction
+# 5. Prediction
 if not(dataset_loaded):
     ## Preparing the test set
     airport_test_dataset_path = "Test_data/test_set_airport_data.xlsx"
