@@ -82,7 +82,7 @@ def ComputeQandN(df_airport):
         
         if row % 50000 == 0:
             running_time = time.time() - start_time
-            print("Row number: ", row, "/ Running time: " , running_time)
+            # print("Row number: ", row, "/ Running time: " , running_time)
     return N_list, Q_list
 
 

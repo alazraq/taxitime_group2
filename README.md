@@ -2,6 +2,12 @@
 
 Welcome to the repository hosting the code of group 2 for the Eleven Data Challenge on Taxi-time prediction. 
 
+To run the code, simply launch the main.py file and all the steps of our pipelines and modeling will be launched one after the other:
+
+```
+python main.py
+```
+
 ## Repository structure
 
 We splited our our into notebooks and python files. The python files contain all the preprocessing and the modeling while the notebooks were used for experimentation and contain exploratory data analysis and interpretability related code and visuals. You will find below the structure of our repo to walk you through the code and a general case description containing additional info about the case itself. 
@@ -24,8 +30,11 @@ We perform all our preprocessing using classes defined in the preprocessing fold
 - **data_encoder.py:** This file is used to encode the features that require encoding.
 
 ### Modeling folder
+
 Each file in this folder contains a class defining one of the models we used.
-Hyperparameter tuning was done either one Dataiku DSS or a seperate notebook.
+Hyperparameter tuning and comparison of models accuracies and predictions was done either one Dataiku DSS or a seperate notebook. You can ask us to show you our DSS resources during the code review if need be. 
+
+In this code, we simply define the best models we obtained from this external hyperparameter tuning.
 
 ### Utils folder
 Utility methods to be used by the preprocessing pipelines and metrics for our models.

@@ -92,5 +92,5 @@ aircraft = df_test[['aircraft_model', 'aircraft_taxitime']].groupby("aircraft_mo
 df_test = pd.merge(df_test,aircraft, on = 'aircraft_model', how='left')
 
 ## Predicting taxitime
-y_predict = model_gbm.predict(df_test)
-print(y_predict[0:5])
+# y_predict = model_gbm.predict(df_test)
+# print(y_predict[0:5])
