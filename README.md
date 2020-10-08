@@ -6,8 +6,15 @@ Welcome to the repository hosting the code of group 2 for the Eleven Data Challe
 
 ### ``main.py``
 
-The gateway to our code is the main.py file.
+The gateway to our code is the main.py file. It takes one command line argument ``--dataset_loaded`` indicating if the preprocessed dataset is available. If this flag is up, we skip the preprocessing steps and go directly to step number 6 below. Otherwise we do the following:
 
+1. Loading the necessary packages
+2. Loading the datasets and creating preprocessing pipelines
+3. Launching the Preprocessing pipelines
+4. Combining datasets
+5. Cleaning the training dataset
+6. Splitting into training and validation datasets
+7. Models definition
 
 ## Preprocessing folder
 
