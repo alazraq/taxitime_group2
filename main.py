@@ -1,4 +1,4 @@
-# 1. Loading the necessary packages
+# 1. Importing the necessary packages
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
@@ -7,11 +7,12 @@ import math
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime, timedelta
-from preprocessing import AirportPreprocessingPipeline, GeoPreprocessingPipeline, WeatherPreprocessingPipeline, TrainPreprocessingPipeline
+from Preprocessing.preprocessing import AirportPreprocessingPipeline, GeoPreprocessingPipeline, WeatherPreprocessingPipeline, TrainPreprocessingPipeline, preprocess_datasets
 from scipy import stats
 import os.path
-from xgb_model import XGBModel
+from Modeling.gbm_model import GBMModel
 import argparse
+from Utils.metrics import rmse, accuracy
 
 # Parsing the flag dataset_loaded, if the flag is up skip the preprocessing
 parser = argparse.ArgumentParser(description='Parser for main.')
@@ -20,54 +21,11 @@ args = parser.parse_args()
 dataset_loaded = args.dataset_loaded
 
 if not(dataset_loaded):
-    # 2. Loading the datasets and creating preprocessing pipelines
-    print("Loading the datasets and creating pipelines...")
-    df_airport_initial = pd.read_csv("Raw_data/training_set_airport_data.csv")
-    df_geographic_initial = pd.read_csv("Prepared_data/new_geographic_data.csv", sep = ";")
-    df_weather_initial = pd.read_csv("Raw_data/Weather_data/weather_data_train_set.csv")
-    df_aircraft = pd.read_csv("Prepared_data/ACchar.csv", sep = ";")
-
-    app = AirportPreprocessingPipeline()
-    gpp = GeoPreprocessingPipeline()
-    wpp = WeatherPreprocessingPipeline()
-    tpp = TrainPreprocessingPipeline()
-    print("Loading datasets done")
-
-    # 3. Preprocessing
-    # Each dataset is preocessed by the pipelines' fit and transform functions
-    print("Preprocessing the datasets...") 
-    df_airport = app.fit(df_airport_initial)
-    df_airport = app.transform(df_airport_initial)
-    print("- Airport data preprocessed")
-    df_geographic = gpp.fit(df_geographic_initial)
-    df_geographic = gpp.transform(df_geographic_initial)
-    print("- Geo data preprocessed")
-    df_weather = wpp.fit(df_weather_initial)
-    df_weather = wpp.transform(df_weather_initial)
-    print("- Weather data preprocessed")
-    print('Preprocessing done')
-
-    # 4.Combining datasets
-    print("Combining the datasets into a single training dataset...")
-    # Combining the training set with the geographic dataset (the key is the runway & the stand)
-    df_train_initial = pd.merge(df_airport, df_geographic ,on='runway_stand',how='left')
-
-    # Combining the training set with the weather dataset (the key is the datetime)
-    df_train_initial = pd.merge(df_train_initial, df_weather ,on = 'AOBT_hourly', how='left')
-
-    # Combining the training set with the aircraft characteristics dataset (the key is the datetime)
-    df_train_initial = pd.merge(df_train_initial, df_aircraft ,on = 'aircraft_model', how='left')
-
-    print('Combining datasets done')
-
-    # 5. Cleaning the training dataset
-    print("Cleaning the training dataset...")
-    df_train = tpp.fit(df_train_initial)
-    df_train = tpp.transform(df_train_initial)
-    print('Cleaning done\n')
-
-    # Saving the dataset TAKES A LOT OF TIME
-    # df_train_initial.to_csv("Preprocessed_airport_data.csv", index= False)
+    airport_dataset_path = "Raw_data/training_set_airport_data.csv"
+    geo_dataset_path = "Prepared_data/new_geographic_data.csv"
+    weather_dataset_path = "Raw_data/Weather_data/weather_data_train_set.csv"
+    aircraft_dataset_path = "Prepared_data/ACchar.csv"
+    df_train = preprocess_datasets(airport_dataset_path, geo_dataset_path, weather_dataset_path, aircraft_dataset_path)
 
 else:
     dataset_in_path = os.path.isfile('clean_training_set_vf.csv')
@@ -85,16 +43,28 @@ print(df_train.head())
 print("Splitting into training and validation datasets...")
 df_y = df_train['taxitime']
 df_X = df_train.drop(['taxitime'], axis=1)
-
 # Split test & train randomly
 X_train, X_test, y_train, y_test = train_test_split(
      df_X, df_y, test_size=0.2, random_state=42)
-
+print("Successfully split into training and validation datasets.")
 # 7. Models definition
 
-# XGBoost
-model_xgb = XGBModel()
-model_xgb.fit(x_train=X_train, y_train=y_train, x_test=X_test, y_test=y_test)
-y_predict = model_xgb.predict(test)
-print(y_predict[0:5])
+# LightGBM
+print("Fitting a LightGBM model...")
+model_gbm =  GBMModel()
+model_gbm.fit(x_train=X_train, y_train=y_train, x_test=X_test, y_test=y_test)
+print("Fitting LightGBM model done.")
+# 8. Prediction
 
+## Preparing the test set
+airport_test_dataset_path = "Test_data/test_set_airport_data.xlsx"
+geo_test_dataset_path = "Prepared_data/new_geographic_data.csv"
+weather_test_dataset_path = "Test_data/test_set_weather_data.xlsx"
+aircraft_test_dataset_path = "Prepared_data/ACchar.csv"
+df_test = preprocess_datasets(airport_test_dataset_path, geo_test_dataset_path, weather_test_dataset_path, aircraft_test_dataset_path, excel = True)
+df_test = df_test.drop(['aircraft_taxitime_x'], axis = 1)
+df_test = df_test.drop(['aircraft_taxitime_y'], axis = 1)
+df_test['aircraft_taxitime'] = df_test['aircraft_taxitime'].fillna(clean_test['taxitime'].mean())
+## Predicting taxitime
+y_predict = model_xgb.predict(df_test)
+print(y_predict[0:5])

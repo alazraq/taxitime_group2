@@ -1,26 +1,30 @@
 # Taxi-time prediction - Group 2
 
-Welcome to the repository hosting the code of group 2 for the Eleven Data Challenge on Taxi-time prediction. You will find below the structure of our repo to walk you through the code and a general case description containing additional info about the case. 
+Welcome to the repository hosting the code of group 2 for the Eleven Data Challenge on Taxi-time prediction. You will find below the structure of our repo to walk you through the code and a general case description containing additional info about the case itself. 
 
 ## Repository structure
 
+
+
 ### ``main.py``
 
-The gateway to our code is the main.py file. It takes one command line argument ``--dataset_loaded`` indicating if the preprocessed dataset is available. If this flag is up, we skip the preprocessing steps and go directly to step number 6 below. Otherwise we do the following:
+The gateway to our code is the main.py file. It takes one command line argument ``--dataset_loaded`` indicating if the preprocessed dataset is available. If this flag is up, we import the packages, skip the preprocessing steps and go directly to step number 6 below. Otherwise we do the following in main.py:
 
-1. Loading the necessary packages
+1. Importing the necessary packages
 2. Loading the datasets and creating preprocessing pipelines
-3. Launching the Preprocessing pipelines
-4. Combining datasets
-5. Cleaning the training dataset
+3. Launching the Preprocessing pipelines and obtaining clean datasets
+4. Combining the datasets
+5. Cleaning the resulting dataset
 6. Splitting into training and validation datasets
-7. Models definition
+7. Models definition, hyperparameter tuning and metrics 
 
-## Preprocessing folder
+### Preprocessing folder
 
-## Modeling folder
+We perform all our preprocessing using 
 
-## Utils folder
+### Modeling folder
+
+### Utils folder
 
 
 ## Case description
@@ -39,9 +43,4 @@ The gateway to our code is the main.py file. It takes one command line argument 
     - Real airport operational data
     - Official FAA aircraft characteristics
     - Weather data from the considered airport
-
-
-- **Code eliverables:** Code should include:
-    - Your feature engineering code specifying how you modified your data and why (make sure to clearly comment your code to explain why you processed the data the way you chose to)
-    - Your models’ parametrization, training code and testing code
 

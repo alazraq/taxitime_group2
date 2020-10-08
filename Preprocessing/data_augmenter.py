@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 from scipy import stats
-from utils import DatetimeToTaxitime, distanceInKmBetweenCoordinates, ComputeQandN,date_transfo
+from Utils.utils import DatetimeToTaxitime, distanceInKmBetweenCoordinates, ComputeQandN,date_transfo
 
 
 class AirportDataAugmenter(BaseEstimator, TransformerMixin):
@@ -46,36 +46,58 @@ class TrainDataAugmenter(BaseEstimator, TransformerMixin):
     def fit(self, x, y=None):
         return self
 
-    def transform(self, df_train, y=None):
+    def transform(self, df, y=None):
         # Drops the missing values for all the column where they correspond to less than 1% of the dataset
         subset_delete = ['Manufacturer', 'Engines', 'Wingspan__ft', 'Length__ft', 'Tail_Height__ft', 'Wheelbase__ft', 'Wake_Category', 'temperature', 'apparentTemperature', 'dewPoint','humidity','windSpeed', 'visibility', 'precipType', 'precipAccumulation', 'ozone']
-        df_train = df_train.dropna(subset = subset_delete) 
+        df = df.dropna(subset = subset_delete) 
 
         # For the remaining NAs value (weather data), 
         # Uses the method fillna assuming that the weather does not change as much from one hour to another
-        df_train = df_train.fillna(method='ffill')
+        df = df.fillna(method='ffill')
 
         # For some outliers, the ATOT is before the AOBT: there is a mistake so we delete them
-        df_train = df_train[df_train["taxitime"] > 0]
-
-
-        # For the others, we use Z-score strategy and delete points that fall outside of 3 standard deviations 
-        z_score = np.abs(stats.zscore(df_train.taxitime))
-        threshold = 3
-        df_train = df_train[(z_score< threshold)]
+        df = df[df["taxitime"] > 0]
 
         # Creates circular hours and several date-related columns
-        df_train = date_transfo(df_train)
+        df = date_transfo(df)
         
         #Delete useless columns
-        df_train = df_train.drop(['flight_dt', 'ATOT', 'AOBT_hourly'], axis = 1)
+        df = df.drop(['flight_dt', 'ATOT', 'AOBT_hourly'], axis = 1)
 
-         #Features per manufacturer
-        avg_manuf = df_train[['Manufacturer', 'taxitime']].groupby('Manufacturer').mean()
+         #Features per aircraft model
+        avg_aircraft = df[['aircraft_model', 'taxitime']].groupby('aircraft_model').mean()
 
-        avg_manuf.rename(columns={'taxitime':'avg_manuf'}, 
+        avg_aircraft.rename(columns={'taxitime':'aircraft_taxitime'}, 
                         inplace=True)
 
-        df_train = pd.merge(df_train, avg_manuf ,on='Manufacturer',how='left')
+        df = pd.merge(df, avg_aircraft ,on='aircraft_model',how='left')
         
-        return df_train
+        # Computing the moving average of the taxitime
+
+        df['AOBT'] = pd.to_datetime(df['AOBT'])
+        moving_avg = df[['AOBT', 'taxitime']]
+        moving_avg = moving_avg.set_index('AOBT')
+
+        #Display each minute within 2015 & 2018
+        moving_avg = moving_avg.groupby(pd.Grouper(freq = "min")).mean()
+        moving_avg = moving_avg.reset_index()
+
+        #Compute the moving average of taxitime for each row, rolling 2 months before (ie 87840 minutes)
+        moving_avg['moving_avg'] = moving_avg['taxitime'].rolling(window = 87840, min_periods = 1).mean()
+
+        #Shift 1 because the rolling average takes into account the actual  row
+        moving_avg['moving_avg'] = moving_avg['moving_avg'].shift(1)
+
+        #Round the nearest integer
+        moving_avg['moving_avg'] = moving_avg['moving_avg'].round(0)
+
+        # For the first 2 months, replace the values by the global mean
+        moving_avg['moving_avg'][0:87840] = moving_avg['taxitime'].mean()
+
+        moving_avg = moving_avg.dropna()
+        moving_avg = moving_avg.reset_index()
+
+        #Combine the moving_avg table with our clean dataset
+        df = pd.merge(df, moving_avg[['AOBT', 'moving_avg']] ,on = 'AOBT', how='left')
+
+        return df

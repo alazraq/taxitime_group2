@@ -87,10 +87,15 @@ def ComputeQandN(df_airport):
 
 # Transforms date into several columns and computes circular hours
 def date_transfo(df):
+    #Transform Date into several column
     pi = np.pi
     df['hour'] = df['AOBT'].dt.hour
     df['month'] = df['AOBT'].dt.month
     df['quarter'] = df['AOBT'].dt.quarter
+    
+    #Where average taxitime < 15 mins
+    df['off-peak_hour'] = ((df['hour'] <4) + (df['hour'] >21 ))*1
+    
     # Get circular hour
     df['hour_sin'] = np.sin(pi* df['hour'].astype(np.float64) /12)
     df['hour_cos'] = np.cos(pi* df['hour'].astype(np.float64) /12)
@@ -100,3 +105,4 @@ def date_transfo(df):
     df['quarter_cos'] = np.cos(pi* df['quarter'].astype(np.float64) /2)
 
     return(df)
+
