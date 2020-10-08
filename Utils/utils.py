@@ -2,6 +2,7 @@ import numpy as np
 import math
 from datetime import timedelta
 import time
+import pandas as pd
 
 # Compute distance between runways & stands in kilometers
 def degreesToRadians(degrees):
@@ -105,4 +106,34 @@ def date_transfo(df):
     df['quarter_cos'] = np.cos(pi* df['quarter'].astype(np.float64) /2)
 
     return(df)
+
+def add_moving_avg(df):
+    # Computing the moving average of the taxitime
+
+        df['AOBT'] = pd.to_datetime(df['AOBT'])
+        moving_avg = df[['AOBT', 'taxitime']]
+        moving_avg = moving_avg.set_index('AOBT')
+
+        #Display each minute within 2015 & 2018
+        moving_avg = moving_avg.groupby(pd.Grouper(freq = "min")).mean()
+        moving_avg = moving_avg.reset_index()
+
+        #Compute the moving average of taxitime for each row, rolling 2 months before (ie 87840 minutes)
+        moving_avg['moving_avg'] = moving_avg['taxitime'].rolling(window = 87840, min_periods = 1).mean()
+
+        #Shift 1 because the rolling average takes into account the actual  row
+        moving_avg['moving_avg'] = moving_avg['moving_avg'].shift(1)
+
+        #Round the nearest integer
+        moving_avg['moving_avg'] = moving_avg['moving_avg'].round(0)
+
+        # For the first 2 months, replace the values by the global mean
+        moving_avg['moving_avg'][0:87840] = moving_avg['taxitime'].mean()
+
+        moving_avg = moving_avg.dropna()
+        moving_avg = moving_avg.reset_index()
+
+        #Combine the moving_avg table with our clean dataset
+        df = pd.merge(df, moving_avg[['AOBT', 'moving_avg']] ,on = 'AOBT', how='left')
+        return df
 

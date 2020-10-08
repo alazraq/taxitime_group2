@@ -3,8 +3,6 @@ from Preprocessing.data_imputer import AirportDataImputer, WeatherDataImputer
 from Preprocessing.data_augmenter import AirportDataAugmenter, GeoDataAugmenter, TrainDataAugmenter
 from Preprocessing.data_encoder import TrainDataEncoder
 import pandas as pd
-# from my_standard_scaler import MyStandardScaler
-# from my_one_hot_encoder import MyOneHotEncoder
 
 class AirportPreprocessingPipeline:
 
@@ -71,7 +69,7 @@ class TrainPreprocessingPipeline:
         return self.pipeline.transform(x)
 
 def preprocess_datasets(airport_dataset_path, geo_dataset_path, weather_dataset_path, aircraft_dataset_path, excel = False):
-    # 2. Loading the datasets and creating preprocessing pipelines
+    # Loading the datasets and creating preprocessing pipelines
     print("Loading the datasets and creating pipelines...")
     if excel:
         df_airport_initial = pd.read_excel(airport_dataset_path)
@@ -90,7 +88,7 @@ def preprocess_datasets(airport_dataset_path, geo_dataset_path, weather_dataset_
     tpp = TrainPreprocessingPipeline()
     print("Loading datasets done")
 
-    # 3. Preprocessing
+    # Launching the preprocessing pipelines
     # Each dataset is preocessed by the pipelines' fit and transform functions
     print("Preprocessing the datasets...") 
     df_airport = app.fit(df_airport_initial)
@@ -104,7 +102,8 @@ def preprocess_datasets(airport_dataset_path, geo_dataset_path, weather_dataset_
     print("- Weather data preprocessed")
     print('Preprocessing done')
 
-    # 4.Combining datasets
+    # Combining datasets
+
     print("Combining the datasets into a single training dataset...")
     # Combining the training set with the geographic dataset (the key is the runway & the stand)
     df_initial = pd.merge(df_airport, df_geographic ,on='runway_stand',how='left')

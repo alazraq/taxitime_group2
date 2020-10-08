@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 from scipy import stats
-from Utils.utils import DatetimeToTaxitime, distanceInKmBetweenCoordinates, ComputeQandN,date_transfo
+from Utils.utils import DatetimeToTaxitime, distanceInKmBetweenCoordinates, ComputeQandN,date_transfo, add_moving_avg
 
 
 class AirportDataAugmenter(BaseEstimator, TransformerMixin):
@@ -71,33 +71,7 @@ class TrainDataAugmenter(BaseEstimator, TransformerMixin):
                         inplace=True)
 
         df = pd.merge(df, avg_aircraft ,on='aircraft_model',how='left')
-        
-        # Computing the moving average of the taxitime
 
-        df['AOBT'] = pd.to_datetime(df['AOBT'])
-        moving_avg = df[['AOBT', 'taxitime']]
-        moving_avg = moving_avg.set_index('AOBT')
-
-        #Display each minute within 2015 & 2018
-        moving_avg = moving_avg.groupby(pd.Grouper(freq = "min")).mean()
-        moving_avg = moving_avg.reset_index()
-
-        #Compute the moving average of taxitime for each row, rolling 2 months before (ie 87840 minutes)
-        moving_avg['moving_avg'] = moving_avg['taxitime'].rolling(window = 87840, min_periods = 1).mean()
-
-        #Shift 1 because the rolling average takes into account the actual  row
-        moving_avg['moving_avg'] = moving_avg['moving_avg'].shift(1)
-
-        #Round the nearest integer
-        moving_avg['moving_avg'] = moving_avg['moving_avg'].round(0)
-
-        # For the first 2 months, replace the values by the global mean
-        moving_avg['moving_avg'][0:87840] = moving_avg['taxitime'].mean()
-
-        moving_avg = moving_avg.dropna()
-        moving_avg = moving_avg.reset_index()
-
-        #Combine the moving_avg table with our clean dataset
-        df = pd.merge(df, moving_avg[['AOBT', 'moving_avg']] ,on = 'AOBT', how='left')
+        # df = add_moving_avg(df)
 
         return df
